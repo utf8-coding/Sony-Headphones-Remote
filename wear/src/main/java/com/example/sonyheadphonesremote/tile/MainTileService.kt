@@ -1,13 +1,21 @@
 package com.example.sonyheadphonesremote.tile
 
 import android.content.Context
+import androidx.compose.ui.graphics.Color
 import androidx.wear.protolayout.ColorBuilders.argb
+import androidx.wear.protolayout.DeviceParametersBuilders.DeviceParameters
 import androidx.wear.protolayout.LayoutElementBuilders
+import androidx.wear.protolayout.LayoutElementBuilders.Column
+import androidx.wear.protolayout.LayoutElementBuilders.Row
 import androidx.wear.protolayout.ResourceBuilders
 import androidx.wear.protolayout.TimelineBuilders
 import androidx.wear.protolayout.material.Colors
+import androidx.wear.protolayout.material.CompactChip
 import androidx.wear.protolayout.material.Text
+import androidx.wear.protolayout.ModifiersBuilders.Clickable
 import androidx.wear.protolayout.material.Typography
+import androidx.wear.protolayout.material.Button
+import androidx.wear.protolayout.material.ButtonColors
 import androidx.wear.protolayout.material.layouts.PrimaryLayout
 import androidx.wear.tiles.RequestBuilders
 import androidx.wear.tiles.TileBuilders
@@ -68,14 +76,26 @@ private fun tileLayout(
     requestParams: RequestBuilders.TileRequest,
     context: Context,
 ): LayoutElementBuilders.LayoutElement {
-    return PrimaryLayout.Builder(requestParams.deviceConfiguration)
-        .setResponsiveContentInsetEnabled(true)
-        .setContent(
-            Text.Builder(context, "Hello World!")
-                .setColor(argb(Colors.DEFAULT.onSurface))
-                .setTypography(Typography.TYPOGRAPHY_CAPTION1)
-                .build()
-        ).build()
+    return Column.Builder()
+        .addContent(
+            CompactChip.Builder(
+                context,
+                "Noise Cancelling",
+                Clickable.Builder().build(),
+                requestParams.deviceConfiguration
+            ).build()
+        )
+        .addContent(
+            CompactChip.Builder(
+                context,
+                "Ambient Sound",
+                Clickable.Builder().build(),
+                requestParams.deviceConfiguration
+            ).build()
+        )
+        .addContent(CompactChip.Builder(context, "Off", Clickable.Builder().build(), requestParams.deviceConfiguration).build())
+
+        .build()
 }
 
 @Preview(device = WearDevices.SMALL_ROUND)
