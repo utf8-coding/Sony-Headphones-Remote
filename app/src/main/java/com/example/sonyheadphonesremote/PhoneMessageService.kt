@@ -21,11 +21,12 @@ class PhoneMessageService: WearableListenerService() {
 
         when (messageEvent.path) {
             Constants.WATCH_TO_PHONE_MESSAGE_PATH -> {
-                val receivedMessage = String(messageEvent.data)
-                Log.d(TAG, "Received message from watch: '$receivedMessage' (from node: ${messageEvent.sourceNodeId})")
-                val replyMessage = "Mobile received: '$receivedMessage'. Thanks!"
-                sendReplyToWatch(replyMessage, Constants.PHONE_TO_WATCH_REPLY_PATH, messageEvent.sourceNodeId)
+                val receivedState = String(messageEvent.data).toInt()
+                Log.d(TAG, "Received from watch: '$receivedState' (from node: ${messageEvent.sourceNodeId})")
 
+                //TODO: TEMP reply, should base on the actual state
+                val replyMessage = "$receivedState"
+                sendReplyToWatch(replyMessage, Constants.PHONE_TO_WATCH_REPLY_PATH, messageEvent.sourceNodeId)
             }
             else -> {
                 Log.d(TAG, "Unknown message path on phone: ${messageEvent.path}")

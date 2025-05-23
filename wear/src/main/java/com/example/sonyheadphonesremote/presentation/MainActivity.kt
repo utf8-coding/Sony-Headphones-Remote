@@ -5,7 +5,11 @@
 
 package com.example.sonyheadphonesremote.presentation
 
+import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.ContentValues.TAG
+import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -20,14 +24,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.material.Button
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
@@ -35,7 +43,6 @@ import androidx.wear.compose.material.TimeText
 import com.example.sonyheadphonesremote.BaseApplication
 import com.example.sonyheadphonesremote.common.Constants
 import com.example.sonyheadphonesremote.presentation.theme.SonyHeadphonesRemoteTheme
-import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +54,7 @@ import kotlinx.coroutines.tasks.await
 data class HeadphoneState(val status: Status)
 
 enum class Status {
-    ANC, OFF, ENV, DISCONNECTED
+    ANC, OFF, AMB, DISCONNECTED
 }
 
 class MainActivity : ComponentActivity() {
@@ -62,25 +69,31 @@ class MainActivity : ComponentActivity() {
 
         setTheme(android.R.style.Theme_DeviceDefault)
 
-        var headphoneState by mutableStateOf(HeadphoneState(Status.DISCONNECTED))
+        var headphoneState = mutableStateOf(HeadphoneState(Status.DISCONNECTED))
 
         // Handle intent from phone
         intent?.let {
+            Log.d(TAG, "Received intent from phone: ${it.action}")
             val statusString = it.getStringExtra("HEADPHONE_STATUS")
             statusString?.let { str ->
-                val newStatus = Status.valueOf(str.uppercase()) // Ensure uppercase to match enum
-                headphoneState = HeadphoneState(newStatus)
-                Log.d(TAG, "Received headphone status from phone: $newStatus")
+                when(str.toInt()){
+                    1 -> headphoneState.value = HeadphoneState(Status.OFF)
+                    2 -> headphoneState.value = HeadphoneState(Status.ANC)
+                    3 -> headphoneState.value = HeadphoneState(Status.AMB)
+                    else -> headphoneState.value = HeadphoneState(Status.DISCONNECTED)
+                }
             }
         }
 
+        val filter = IntentFilter("PHONE_MESSAGE_RECEIVED")
+        messageReceiver.onStateReceived = { newState ->
+            headphoneState.value = newState
+        }
+        LocalBroadcastManager.getInstance(this).registerReceiver(messageReceiver, filter)
+
         setContent {
             WearApp(headphoneState) { state ->
-                when(state){
-                    1 -> { // Example: This could be tied to a button press now
-                        sendMessageToPhone("state1", Constants.WATCH_TO_PHONE_MESSAGE_PATH)
-                    }
-                }
+                sendMessageToPhone("$state", Constants.WATCH_TO_PHONE_MESSAGE_PATH)
             }
         }
     }
@@ -113,13 +126,33 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        activityScope.cancel() // 取消所有协程
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(messageReceiver)
+        activityScope.cancel()
+    }
+
+    // BroadcastReceiver to handle messages from MessageReceiverService
+    private val messageReceiver = object : BroadcastReceiver() {
+        var onStateReceived: (HeadphoneState) -> Unit = { newState ->  }
+
+        override fun onReceive(context: Context?, intent: android.content.Intent?) {
+            intent?.let {
+                val statusString = it.getStringExtra("HEADPHONE_STATUS")
+                statusString?.let { str ->
+                    when(str.toInt()){
+                        1 -> onStateReceived(HeadphoneState(Status.OFF))
+                        2 -> onStateReceived(HeadphoneState(Status.ANC))
+                        3 -> onStateReceived(HeadphoneState(Status.AMB))
+                        else -> onStateReceived(HeadphoneState(Status.DISCONNECTED))
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
 fun WearApp(
-    headphoneState: HeadphoneState, // Pass the state to the Composable
+    headphoneState: MutableState<HeadphoneState>,
     onChangeState: (Int) -> Unit
 ) {
     SonyHeadphonesRemoteTheme {
@@ -137,7 +170,8 @@ fun WearApp(
                 verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically), // Uniform spacing
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "Status: ${headphoneState.status}") // Display the current status
+                StatusIndicator(isConnected = headphoneState.value.status != Status.DISCONNECTED)
+
                 Button(
                     modifier = Modifier
                         .width(100.dp)
@@ -153,7 +187,9 @@ fun WearApp(
                     modifier = Modifier
                         .width(100.dp)
                         .height(35.dp),
-                    onClick = { /*TODO*/ },
+                    onClick = {
+                        onChangeState(2)
+                    },
                     colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface)
                 ) {
                     Text(text = "NC")
@@ -162,7 +198,9 @@ fun WearApp(
                     modifier = Modifier
                         .width(100.dp)
                         .height(35.dp),
-                    onClick = { /*TODO*/ },
+                    onClick = {
+                        onChangeState(3)
+                    },
                     colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.surface)
                 ) {
                     Text(text = "Ambient")
@@ -170,4 +208,23 @@ fun WearApp(
             }
         }
     }
+}
+
+@Composable
+fun StatusIndicator(isConnected: Boolean) {
+    val iconText = if (isConnected) "✔" else "✘"
+    val iconColor = if (isConnected) Color.Green else Color.Red
+    Text(text = iconText, color = iconColor)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ConnectedStatusPreview() {
+    StatusIndicator(isConnected = true)
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DisconnectedStatusPreview() {
+    StatusIndicator(isConnected = false)
 }

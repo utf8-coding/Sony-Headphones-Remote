@@ -13,10 +13,13 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
         <service
-            android:name="service.WatchMessageService"
+            android:name=".service.WatchMessageService"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear"
+                    android:host="*"
+                    android:path="/phone_to_watch_reply" />
             </intent-filter>
         </service>
         <service

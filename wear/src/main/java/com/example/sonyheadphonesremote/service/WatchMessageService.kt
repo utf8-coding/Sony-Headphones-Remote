@@ -1,6 +1,7 @@
-package service
+package com.example.sonyheadphonesremote.service
 
 import android.content.Intent
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.util.Log
 import android.widget.Toast
 import com.example.sonyheadphonesremote.common.Constants
@@ -14,7 +15,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 class WatchMessageService: WearableListenerService() {
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
         super.onMessageReceived(messageEvent)
@@ -25,9 +25,9 @@ class WatchMessageService: WearableListenerService() {
                 val receivedMessage = String(messageEvent.data)
                 Log.d(TAG, "Received message from phone: '$receivedMessage' (from node: ${messageEvent.sourceNodeId})")
 
-                val updateUiIntent = Intent("com.example.sonyheadphonesremote.PHONE_MESSAGE_RECEIVED")
-                updateUiIntent.putExtra("message", receivedMessage)
-                sendBroadcast(updateUiIntent)
+                val updateUiIntent = Intent("PHONE_MESSAGE_RECEIVED")
+                updateUiIntent.putExtra("HEADPHONE_STATUS", receivedMessage)
+                LocalBroadcastManager.getInstance(this).sendBroadcast(updateUiIntent)
             }
             else -> {
                 Log.d(TAG, "Unknown message path on phone: ${messageEvent.path}")
