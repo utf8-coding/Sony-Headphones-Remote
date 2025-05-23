@@ -1,4 +1,4 @@
-package com.example.sonyheadphonesremote.presentation
+package com.example.sonyheadphonesremote
 
 import android.annotation.SuppressLint
 import android.app.Application

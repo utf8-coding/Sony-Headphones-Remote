@@ -19,7 +19,6 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix = ".debug"
             isMinifyEnabled = false
             isShrinkResources = false
             proguardFiles("proguard-rules.pro")
@@ -43,8 +42,11 @@ android {
 }
 
 dependencies {
-
     implementation(libs.play.services.wearable)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)

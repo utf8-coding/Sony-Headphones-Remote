@@ -1,22 +1,13 @@
 package com.example.sonyheadphonesremote.tile
 
 import android.content.Context
-import androidx.compose.ui.graphics.Color
-import androidx.wear.protolayout.ColorBuilders.argb
-import androidx.wear.protolayout.DeviceParametersBuilders.DeviceParameters
+import androidx.wear.protolayout.ActionBuilders.LaunchAction
 import androidx.wear.protolayout.LayoutElementBuilders
 import androidx.wear.protolayout.LayoutElementBuilders.Column
-import androidx.wear.protolayout.LayoutElementBuilders.Row
+import androidx.wear.protolayout.ModifiersBuilders.Clickable
 import androidx.wear.protolayout.ResourceBuilders
 import androidx.wear.protolayout.TimelineBuilders
-import androidx.wear.protolayout.material.Colors
 import androidx.wear.protolayout.material.CompactChip
-import androidx.wear.protolayout.material.Text
-import androidx.wear.protolayout.ModifiersBuilders.Clickable
-import androidx.wear.protolayout.material.Typography
-import androidx.wear.protolayout.material.Button
-import androidx.wear.protolayout.material.ButtonColors
-import androidx.wear.protolayout.material.layouts.PrimaryLayout
 import androidx.wear.tiles.RequestBuilders
 import androidx.wear.tiles.TileBuilders
 import androidx.wear.tiles.tooling.preview.Preview
@@ -45,55 +36,50 @@ class MainTileService : SuspendingTileService() {
 private fun resources(
     requestParams: RequestBuilders.ResourcesRequest
 ): ResourceBuilders.Resources {
-    return ResourceBuilders.Resources.Builder()
-        .setVersion(RESOURCES_VERSION)
-        .build()
+    return ResourceBuilders.Resources.Builder().setVersion(RESOURCES_VERSION).build()
 }
 
 private fun tile(
     requestParams: RequestBuilders.TileRequest,
     context: Context,
 ): TileBuilders.Tile {
-    val singleTileTimeline = TimelineBuilders.Timeline.Builder()
-        .addTimelineEntry(
-            TimelineBuilders.TimelineEntry.Builder()
-                .setLayout(
+    val singleTileTimeline = TimelineBuilders.Timeline.Builder().addTimelineEntry(
+            TimelineBuilders.TimelineEntry.Builder().setLayout(
                     LayoutElementBuilders.Layout.Builder()
-                        .setRoot(tileLayout(requestParams, context))
-                        .build()
-                )
-                .build()
-        )
-        .build()
+                        .setRoot(tileLayout(requestParams, context)).build()
+                ).build()
+        ).build()
 
-    return TileBuilders.Tile.Builder()
-        .setResourcesVersion(RESOURCES_VERSION)
-        .setTileTimeline(singleTileTimeline)
-        .build()
+    return TileBuilders.Tile.Builder().setResourcesVersion(RESOURCES_VERSION)
+        .setTileTimeline(singleTileTimeline).build()
 }
 
 private fun tileLayout(
     requestParams: RequestBuilders.TileRequest,
     context: Context,
 ): LayoutElementBuilders.LayoutElement {
-    return Column.Builder()
-        .addContent(
+    return Column.Builder().addContent(
             CompactChip.Builder(
                 context,
                 "Noise Cancelling",
-                Clickable.Builder().build(),
+                Clickable.Builder().setOnClick(LaunchAction.Builder().build()).build(),
                 requestParams.deviceConfiguration
             ).build()
-        )
-        .addContent(
+        ).addContent(
             CompactChip.Builder(
                 context,
                 "Ambient Sound",
-                Clickable.Builder().build(),
+                Clickable.Builder().setOnClick(LaunchAction.Builder().build()).build(),
+                requestParams.deviceConfiguration
+            ).build()
+        ).addContent(
+            CompactChip.Builder(
+                context,
+                "Off",
+                Clickable.Builder().setOnClick(LaunchAction.Builder().build()).build(),
                 requestParams.deviceConfiguration
             ).build()
         )
-        .addContent(CompactChip.Builder(context, "Off", Clickable.Builder().build(), requestParams.deviceConfiguration).build())
 
         .build()
 }
