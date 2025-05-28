@@ -12,6 +12,9 @@
     <!-- Needed only if your app communicates with already-paired Bluetooth
          devices. -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!--  For debugging  -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <application
         android:name=".BaseApplication"
@@ -35,5 +38,22 @@
                     android:path="/watch_to_phone_message" />
             </intent-filter>
         </service>
+
+        <service
+            android:name=".DriverTestService"
+            android:foregroundServiceType="mediaPlayback"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"/>
+
+        <activity
+            android:name=".DebugActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
     </application>
 </manifest>
